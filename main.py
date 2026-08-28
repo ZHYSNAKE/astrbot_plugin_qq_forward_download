@@ -155,7 +155,7 @@ class ForwardDownloadPlugin(Star):
 
         return f"{index}: 不支持的组件类型 {type(comp).__name__}"
 
-    # ===== 处理消息链 =====
+    # ===== 处理消息链（支持视频和音频） =====
     async def _process_chain(
         self,
         chain: List[Union[Dict, Any]],
@@ -172,7 +172,7 @@ class ForwardDownloadPlugin(Star):
             seg = chain[0]
             if isinstance(seg, dict) and seg.get('type') != 'forward':
                 seg_type = seg.get('type')
-                if seg_type in ('text', 'image', 'file'):
+                if seg_type in ('text', 'image', 'file', 'video', 'record', 'audio'):
                     return await self._save_single_from_dict(seg, parent_dir, index, session)
             if isinstance(seg, (Plain, Image, File)):
                 return await self._save_single(seg, parent_dir, index, session)
@@ -207,6 +207,22 @@ class ForwardDownloadPlugin(Star):
                         descs.append(f"文件 -> {path.name}")
                     else:
                         descs.append(f"{i}: 文件缺少 URL")
+
+                elif seg_type in ('video',):
+                    url = seg_data.get('url') or seg_data.get('file')
+                    if url:
+                        path = await self._download_from_url(url, sub_dir / str(i), '.mp4', session)
+                        descs.append(f"视频 -> {path.name}")
+                    else:
+                        descs.append(f"{i}: 视频缺少 URL")
+
+                elif seg_type in ('record', 'audio'):
+                    url = seg_data.get('url') or seg_data.get('file')
+                    if url:
+                        path = await self._download_from_url(url, sub_dir / str(i), '.amr', session)
+                        descs.append(f"音频 -> {path.name}")
+                    else:
+                        descs.append(f"{i}: 音频缺少 URL")
 
                 elif seg_type == 'forward':
                     inner_messages = seg_data.get('messages') or seg_data.get('content') or seg_data.get('nodes')
@@ -272,7 +288,7 @@ class ForwardDownloadPlugin(Star):
 
         return f"{index}: 消息链 -> {sub_dir}\n" + "\n".join(descs)
 
-    # ===== 从字典直接保存单个元素 =====
+    # ===== 从字典直接保存单个元素（支持视频、音频） =====
     async def _save_single_from_dict(
         self,
         seg: dict,
@@ -300,6 +316,20 @@ class ForwardDownloadPlugin(Star):
                 return f"{index}: 文件 -> {path}"
             else:
                 return f"{index}: 文件缺少 URL"
+        elif seg_type == 'video':
+            url = seg_data.get('url') or seg_data.get('file')
+            if url:
+                path = await self._download_from_url(url, parent_dir / str(index), '.mp4', session)
+                return f"{index}: 视频 -> {path}"
+            else:
+                return f"{index}: 视频缺少 URL"
+        elif seg_type in ('record', 'audio'):
+            url = seg_data.get('url') or seg_data.get('file')
+            if url:
+                path = await self._download_from_url(url, parent_dir / str(index), '.amr', session)
+                return f"{index}: 音频 -> {path}"
+            else:
+                return f"{index}: 音频缺少 URL"
         else:
             return f"{index}: 不支持的类型 {seg_type}"
 
@@ -350,7 +380,7 @@ class ForwardDownloadPlugin(Star):
                 await asyncio.sleep(0.5 * (attempt + 1))
         raise RuntimeError(f"获取转发消息失败，ID={msg_id}")
 
-    # ===== 下载工具（增加文件大小日志和权限检查） =====
+    # ===== 下载工具 =====
     async def _download_from_url(
         self,
         url: str,
@@ -372,7 +402,6 @@ class ForwardDownloadPlugin(Star):
                     resp.raise_for_status()
                     content = await resp.read()
                 final_path.write_bytes(content)
-                # ---- 验证写入 ----
                 if final_path.exists():
                     size = final_path.stat().st_size
                     logger.info(f"下载成功: {final_path} (大小: {size} 字节)")
