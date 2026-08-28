@@ -7,7 +7,6 @@
 该插件解决了用户需要手动逐条保存转发消息中内容的痛点。当你在私聊中向机器人发送一条包含多段内容（如文字、图片、文件、其他转发消息）的转发消息时，插件会自动解析并依次保存为编号清晰的文件或文件夹，并在完成后向你汇报结果。
 
 - **插件名称**：QQ 私聊转发消息下载器（astrbot_plugin_qq_forward_download）
-- **版本**：1.0.1
 - **作者**: ZHYSNAKE
 
 ## 功能说明
@@ -76,9 +75,9 @@
 
 本插件提供一个配置项：
 
-save_path：保存地址（相对）{ 绝对不会写 }
+save_path：保存地址（相对）
 默认 astrbot/data/plugin_data/astrbot_plugin_qq_forward_download/downloads
 
-TODO:
-save_path：能支持绝对路径
-
+v1.0.0：基本功能写完
+v1.0.1：补充视频和音频文件下载
+v1.0.2：补充保存路径安全性

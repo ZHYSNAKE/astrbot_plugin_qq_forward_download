@@ -18,7 +18,29 @@ class ForwardDownloadPlugin(Star):
         super().__init__(context)
         self.config = config
         custom_dir = config.get("save_path", "downloads")
+
+        # ----- 安全校验：只允许相对路径，禁止绝对路径和路径穿越 -----
+        from pathlib import Path
+        path_obj = Path(custom_dir)
+        if path_obj.is_absolute():
+            raise ValueError(f"save_path 不能为绝对路径，当前值: {custom_dir}")
+        if ".." in path_obj.parts:
+            raise ValueError(f"save_path 不能包含 '..' 进行目录穿越，当前值: {custom_dir}")
+
         self.base_dir = StarTools.get_data_dir() / custom_dir
+        # -----------------------------------------------------------
+
+        # 原有目录创建和可写性测试保持不变
+        try:
+            self.base_dir.mkdir(parents=True, exist_ok=True)
+            test_file = self.base_dir / ".write_test"
+            test_file.touch()
+            test_file.unlink()
+            logger.info(f"保存目录已就绪: {self.base_dir.absolute()}")
+        except Exception as e:
+            logger.error(f"保存目录不可用: {self.base_dir.absolute()}, 错误: {e}")
+            raise RuntimeError(f"无法创建或写入保存目录: {self.base_dir}") from e
+        
         self.debug = config.get("debug", False)
 
         # ---- 自动创建并检查目录可写性 ----
