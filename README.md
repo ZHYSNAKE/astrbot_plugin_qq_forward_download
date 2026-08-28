@@ -9,7 +9,6 @@
 - **插件名称**：QQ 私聊转发消息下载器（astrbot_plugin_qq_forward_download）
 - **版本**：1.0.0
 - **作者**: ZHYSNAKE
-- **标签**：`QQ`、`forward`、`download`、`message`
 
 ## 功能说明
 
