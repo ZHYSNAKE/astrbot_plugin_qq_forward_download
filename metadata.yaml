@@ -1,0 +1,5 @@
+name: QQ 私聊转发消息下载器
+author: ZHYSNAKE
+description: 监听QQ私聊中的转发消息（forward），按消息顺序从上到下以数字命名文件（1、2、3...），递归下载，下载完成后通知用户下载内容和保存位置。
+version: 1.0.0
+repo: 

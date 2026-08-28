@@ -1,0 +1,7 @@
+{
+  "save_path": {
+      "type": "string",
+      "default": "downloads",
+      "description": "保存相对路径（在astrbot/data/plugin_data/astrbot_plugin_qq_forward_download/下）"
+  }
+}
