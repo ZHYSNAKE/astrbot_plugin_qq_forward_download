@@ -8,7 +8,7 @@
 
 - **插件名称**：QQ 私聊转发消息下载器（astrbot_plugin_qq_forward_download）
 - **版本**：1.0.0
-- **作者**:ZHYSNAKE
+- **作者**: ZHYSNAKE
 - **标签**：`QQ`、`forward`、`download`、`message`
 
 ## 功能说明
@@ -77,5 +77,9 @@
 
 本插件提供一个配置项：
 
-save_path：保存地址（绝对/相对）
+save_path：保存地址（相对）{ 绝对不会写 }
 默认 astrbot/data/plugin_data/astrbot_plugin_qq_forward_download/downloads
+
+TODO:
+save_path：能支持绝对路径
+
