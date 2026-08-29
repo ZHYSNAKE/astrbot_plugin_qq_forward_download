@@ -73,7 +73,7 @@ class ForwardDownloadPlugin(Star):
                 if isinstance(c, (Forward, Node, Nodes))
             ]
             if not forward_comps:
-                logger.info("不是转发消息，已忽略")
+                # 不是转发消息，已忽略
                 return
 
             target_dir = self._next_available_dir()
@@ -107,7 +107,7 @@ class ForwardDownloadPlugin(Star):
                 if isinstance(c, (Forward, Node, Nodes))
             ]
             if not forward_comps:
-                logger.info("不是转发消息，已忽略")
+                # 不是转发消息，已忽略
                 return
 
             target_dir = self._next_available_dir()
