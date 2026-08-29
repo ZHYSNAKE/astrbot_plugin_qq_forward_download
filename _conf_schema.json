@@ -3,5 +3,25 @@
       "type": "string",
       "default": "downloads",
       "description": "保存相对路径（在astrbot/data/plugin_data/astrbot_plugin_qq_forward_download/下）"
+  },
+  "session":{
+      "type": "list",
+      "default": [],
+      "description": "监听的聊天(UMO)，不填全部聊天都监听"
+  },
+  "user":{
+      "type": "list",
+      "default": [],
+      "description": "只接收谁的消息，填uid，不填全部都接收"
+  },
+  "say_group":{
+      "type": "bool",
+      "default": false,
+      "description": "在群聊中是否发送下载位置的消息"
+  },
+  "say_private":{
+      "type": "bool",
+      "default": true,
+      "description": "在私聊中是否发送下载位置的消息"
   }
 }

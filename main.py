@@ -28,7 +28,6 @@ class ForwardDownloadPlugin(Star):
             raise ValueError(f"save_path 不能包含 '..' 进行目录穿越，当前值: {custom_dir}")
 
         self.base_dir = StarTools.get_data_dir() / custom_dir
-        # -----------------------------------------------------------
 
         # 原有目录创建和可写性测试保持不变
         try:
@@ -56,36 +55,79 @@ class ForwardDownloadPlugin(Star):
 
         self.bot = None
 
+    def isInList(self,user):
+        for u in self.config.get("user"):
+            if u == user:
+                return True
+        return False
+
     @filter.event_message_type(filter.EventMessageType.PRIVATE_MESSAGE)
     async def on_private_message(self, event: AstrMessageEvent):
-        logger.info("准备处理私聊消息")
+        """主函数-私聊"""
         self.bot = event.bot
 
-        forward_comps = [
-            c for c in event.message_obj.message
-            if isinstance(c, (Forward, Node, Nodes))
-        ]
-        if not forward_comps:
-            logger.info("不是转发消息，已忽略")
-            return
+        sender_id = event.get_sender_id() 
+        if not self.config.get("user") or self.isInList(self,sender_id):
+            forward_comps = [
+                c for c in event.message_obj.message
+                if isinstance(c, (Forward, Node, Nodes))
+            ]
+            if not forward_comps:
+                logger.info("不是转发消息，已忽略")
+                return
 
-        target_dir = self._next_available_dir()
-        target_dir.mkdir(parents=True, exist_ok=True)
+            target_dir = self._next_available_dir()
+            target_dir.mkdir(parents=True, exist_ok=True)
 
-        results = []
-        item_no = 1
+            results = []
+            item_no = 1
 
-        timeout = aiohttp.ClientTimeout(total=60)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            for comp in forward_comps:
-                desc = await self._process_component(
-                    comp, target_dir, item_no, session, depth=1, is_top_level=True
-                )
-                results.append(desc)
-                item_no += 1
+            timeout = aiohttp.ClientTimeout(total=60)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                for comp in forward_comps:
+                    desc = await self._process_component(
+                        comp, target_dir, item_no, session, depth=1, is_top_level=True
+                    )
+                    results.append(desc)
+                    item_no += 1
 
-        reply = f"已下载到：{target_dir}\n" + "\n".join(results[:20])
-        yield event.plain_result(reply)
+            reply = f"已下载到：{target_dir}\n" + "\n".join(results[:20])
+            if self.config.get("say_private") == True:
+                yield event.plain_result(reply)
+
+    @filter.event_message_type(filter.EventMessageType.GROUP_MESSAGE)
+    async def on_group_message(self, event: AstrMessageEvent):
+        """主函数-群聊"""
+        self.bot = event.bot
+        sender_id = event.get_sender_id() 
+        if not self.config.get("user") or self.isInList(self,sender_id):
+
+            forward_comps = [
+                c for c in event.message_obj.message
+                if isinstance(c, (Forward, Node, Nodes))
+            ]
+            if not forward_comps:
+                logger.info("不是转发消息，已忽略")
+                return
+
+            target_dir = self._next_available_dir()
+            target_dir.mkdir(parents=True, exist_ok=True)
+
+            results = []
+            item_no = 1
+
+            timeout = aiohttp.ClientTimeout(total=60)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                for comp in forward_comps:
+                    desc = await self._process_component(
+                        comp, target_dir, item_no, session, depth=1, is_top_level=True
+                    )
+                    results.append(desc)
+                    item_no += 1
+
+            reply = f"已下载到：{target_dir}\n" + "\n".join(results[:20])
+            if self.config.get("say_group") == True:
+                yield event.plain_result(reply)
 
     # ===== 核心递归处理 =====
     async def _process_component(
