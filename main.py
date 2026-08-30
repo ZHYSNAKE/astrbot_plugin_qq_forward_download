@@ -14,6 +14,21 @@ from astrbot.api.star import Context, Star, StarTools
 
 
 class ForwardDownloadPlugin(Star):
+
+    MIME_TO_EXT = {
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'image/gif': '.gif',
+        'image/webp': '.webp',
+        'image/bmp': '.bmp',
+        'video/mp4': '.mp4',
+        'video/x-msvideo': '.avi',
+        'audio/mpeg': '.mp3',
+        'audio/amr': '.amr',
+        'application/pdf': '.pdf',
+    }
+
+
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
@@ -452,33 +467,50 @@ class ForwardDownloadPlugin(Star):
         default_ext: str,
         session: aiohttp.ClientSession
     ) -> Path:
+        # 从 URL 路径取扩展名
         ext = default_ext
         if url.startswith("http"):
             parsed = urlparse(url)
             base = os.path.basename(parsed.path)
             if "." in base:
                 ext = os.path.splitext(base)[1] or default_ext
-        final_path = Path(str(target_path) + ext)
 
         for attempt in range(3):
             try:
                 async with session.get(url) as resp:
                     resp.raise_for_status()
                     content = await resp.read()
-                final_path.write_bytes(content)
-                if final_path.exists():
-                    size = final_path.stat().st_size
-                    logger.info(f"下载成功: {final_path} (大小: {size} 字节)")
-                else:
-                    logger.error(f"写入后文件不存在: {final_path}")
-                return final_path
+
+                    # ---- 从 Content-Type 获取真实类型 ----
+                    content_type = resp.headers.get('Content-Type', '').split(';')[0].strip().lower()
+                    ext_from_mime = self.MIME_TO_EXT.get(content_type)
+                    # 优先级：URL 路径 > MIME > 默认值
+                    if ext != default_ext:
+                        # URL 已有扩展名，优先保留
+                        pass
+                    elif ext_from_mime:
+                        ext = ext_from_mime
+                    # 否则保持 default_ext
+
+                    # 重新构造最终路径（防止之前已用旧 ext 构造过）
+                    final_path = Path(str(target_path) + ext)
+                    final_path.write_bytes(content)
+
+                    if final_path.exists():
+                        size = final_path.stat().st_size
+                        logger.info(f"下载成功: {final_path} (大小: {size} 字节)")
+                    else:
+                        logger.error(f"写入后文件不存在: {final_path}")
+                    return final_path
+
             except Exception as e:
                 if attempt == 2:
                     logger.error(f"下载失败 (URL={url})，已重试3次: {e}")
                     raise
                 logger.warning(f"下载失败 (URL={url})，重试 {attempt+1}: {e}")
                 await asyncio.sleep(0.5 * (attempt + 1))
-        return final_path
+
+        return Path(str(target_path) + ext)
 
     # ===== 目录分配 =====
     def _next_available_dir(self) -> Path:
