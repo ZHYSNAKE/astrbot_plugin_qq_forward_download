@@ -2,5 +2,5 @@ name: astrbot_plugin_qq_forward_download
 display_name: QQ 聊天转发消息下载器
 author: ZHYSNAKE
 description: 监听QQ聊天中的转发消息（forward），按消息顺序从上到下以数字命名文件（1、2、3...），递归下载，下载完成后通知用户下载内容和保存位置。
-version: 1.1.4
+version: 1.1.5
 repo: https://github.com/ZHYSNAKE-astrbot-only/astrbot_plugin_qq_forward_download
